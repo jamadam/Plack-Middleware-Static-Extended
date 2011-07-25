@@ -8,6 +8,10 @@ use Plack::Util::Accessor qw( default indexes path root encoding pass_through );
 
 sub call {
     my ($self, $env) = @_;
+    
+    if (! defined $self->indexes) {
+        $self->indexes(1);
+    }
 
     my $res = $self->_handle_static($env);
     if ($res && not ($self->pass_through and $res->[0] == 404)) {
@@ -21,34 +25,34 @@ sub _handle_static {
     my($self, $env) = @_;
 
     my $path_match = $self->path or return;
-    my $path = $env->{PATH_INFO};
+    my $path = $env->{PATH_INFO} || '';
     
-    my $app_class =
-            $self->{indexes} ? 'Plack::App::Directory' : 'Plack::App::File';
+    for ($path) {
+        my $matched = ref $path_match eq 'CODE' ? $path_match->($_) : $_ =~ $path_match;
+        return unless $matched;
+    }
     
-    $self->{file} ||= $app_class->new({
+    $path ||= '/';
+    
+    $self->{file} ||= Plack::App::Directory->new({
         root        => $self->root || '.',
-        encoding    => $self->encoding
+        encoding    => $self->encoding,
+        path        => $path,
     });
     
-    if (@{$self->default} && substr($path, -1, 1) eq '/') {
+    if ($self->default && (length($path) == 0 || substr($path, -1, 1) eq '/')) {
         for my $candidate (@{$self->default}) {
-            $path .= $candidate;
-            my $matched = 'CODE' eq ref $path_match ? $path_match->($path) : $path =~ $path_match;
-            if ($matched) {
-                local $env->{PATH_INFO} = $path;
-                my $res = $self->{file}->call($env);
-                if ($res->[0] == 200) {
-                    return $res;
-                }
+            my $fixed_path = $path . $candidate;
+            local $env->{PATH_INFO} = $fixed_path;
+            my $res = $self->{file}->call($env);
+            if ($res->[0] == 200) {
+                return $res;
             }
         }
     }
-
-    my $matched = 'CODE' eq ref $path_match ? $path_match->($path) : $path =~ $path_match;
-    return unless $matched;
     
-    local $env->{PATH_INFO} = $path; # rewrite PATH
+    local $env->{PATH_INFO} = $path;
+    
     return $self->{file}->call($env);
 }
 
