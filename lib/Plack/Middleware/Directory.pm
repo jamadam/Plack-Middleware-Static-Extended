@@ -2,59 +2,58 @@ package Plack::Middleware::Directory;
 use strict;
 use warnings;
 use parent qw/Plack::Middleware/;
-use Plack::App::Directory;
-
-use Plack::Util::Accessor qw( default indexes path root encoding pass_through );
-
-sub call {
-    my ($self, $env) = @_;
+use Plack::App::File::Extended;
+use Plack::Util::Accessor
+    qw( default path root encoding pass_through permission_check);
     
-    if (! defined $self->indexes) {
-        $self->indexes(1);
-    }
-
-    my $res = $self->_handle_static($env);
-    if ($res && not ($self->pass_through and $res->[0] == 404)) {
-        return $res;
-    }
-
-    return $self->app->($env);
-}
-
-sub _handle_static {
-    my($self, $env) = @_;
-
-    my $path_match = $self->path or return;
-    my $path = $env->{PATH_INFO} || '';
+    sub call {
+        my ($self, $env) = @_;
     
-    for ($path) {
-        my $matched = ref $path_match eq 'CODE' ? $path_match->($_) : $_ =~ $path_match;
-        return unless $matched;
+        my $res = $self->_handle_static($env);
+        if ($res && not ($self->pass_through and $res->[0] == 404)) {
+            return $res;
+        }
+    
+        return $self->app->($env);
     }
     
-    $path ||= '/';
+    sub _handle_static {
+        my($self, $env) = @_;
     
-    $self->{file} ||= Plack::App::Directory->new({
-        root        => $self->root || '.',
-        encoding    => $self->encoding,
-        path        => $path,
-    });
-    
-    if ($self->default && (length($path) == 0 || substr($path, -1, 1) eq '/')) {
-        for my $candidate (@{$self->default}) {
-            my $fixed_path = $path . $candidate;
-            local $env->{PATH_INFO} = $fixed_path;
-            my $res = $self->{file}->call($env);
-            if ($res->[0] == 200) {
-                return $res;
+        my $path_match = $self->path or return;
+        my $path = $env->{PATH_INFO} || '';
+        
+        for ($path) {
+            my $matched = ref $path_match eq 'CODE'
+                                                    ? $path_match->($_)
+                                                    : $_ =~ $path_match;
+            return unless $matched;
+        }
+        
+        $path ||= '/';
+        
+        $self->{file} ||= Plack::App::File::Extended->new({
+            root                => $self->root || '.',
+            encoding            => $self->encoding,
+            path                => $path,
+            permission_check    => $self->permission_check,
+        });
+        
+        if ($self->default && (length($path) == 0 || substr($path, -1, 1) eq '/')) {
+            for my $candidate (@{$self->default}) {
+                my $fixed_path = $path . $candidate;
+                local $env->{PATH_INFO} = $fixed_path;
+                my $res = $self->{file}->call($env);
+                if ($res->[0] == 200) {
+                    return $res;
+                }
             }
         }
+        
+        local $env->{PATH_INFO} = $path;
+        
+        return $self->{file}->call($env);
     }
-    
-    local $env->{PATH_INFO} = $path;
-    
-    return $self->{file}->call($env);
-}
 
 1;
 
@@ -73,7 +72,6 @@ Plack::Middleware::Directory - serve static files like apache
             path => qr{^/(images|js|css)/},
             root => './htdocs/',
             default => ['index.html', 'index.htm'],
-            indexes => 1,
             ;
         $app;
     };
@@ -100,13 +98,6 @@ This option works as apache's DirectoryIndex for overriding index page
 if requests path don't ended with file name.
 
     default => ['index.html', 'index.htm']
-
-=head2 indexes => boolean
-
-This is for disabling directory index page generation.
-
-    indexes => 1 # active
-    indexes => 0 # disabled
 
 =head1 AUTHOR
 

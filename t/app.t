@@ -59,23 +59,4 @@ test_psgi (
     },
 );
 
-test_psgi (
-    client => sub {
-        my $cb  = shift;
-        my $res;
-        $res = $cb->(GET "http://localhost/share/");
-        is $res->code, 200;
-        like $res->content, qr'<title>Index of </title>', 'Index page output';
-        like $res->content, qr'baybridge.jpg', 'Right directory';
-    },
-    app => builder {
-        enable "Plack::Middleware::Directory",
-            path => sub {s!^/share/!!;},
-            root => 'share';
-        sub {
-            [404, [], ['File not found']]
-        };
-    },
-);
-
 done_testing;
