@@ -3,7 +3,12 @@ lib/Plack/Middleware/Directory.pm
 Makefile.PL
 MANIFEST
 README
+share/baybridge.jpg
+share/face.jpg
+share/foo/index.htm
+share/index.html
 t/00_load.t
+t/app.t
 xt/bench.t
 xt/memory_leak.t
 xt/perlcritic.t
