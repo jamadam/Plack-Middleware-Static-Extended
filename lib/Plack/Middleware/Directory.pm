@@ -1,14 +1,13 @@
-package Plack::Middleware::Static::Directory;
+package Plack::Middleware::Directory;
 use strict;
 use warnings;
 use parent qw/Plack::Middleware/;
 use Plack::App::Directory;
 
-use Plack::Util::Accessor qw( candidates path root encoding pass_through );
+use Plack::Util::Accessor qw( default indexes path root encoding pass_through );
 
 sub call {
-    my $self = shift;
-    my $env  = shift;
+    my ($self, $env) = @_;
 
     my $res = $self->_handle_static($env);
     if ($res && not ($self->pass_through and $res->[0] == 404)) {
@@ -23,14 +22,17 @@ sub _handle_static {
 
     my $path_match = $self->path or return;
     my $path = $env->{PATH_INFO};
-
-    $self->{file} ||= Plack::App::Directory->new({
+    
+    my $app_class =
+            $self->{indexes} ? 'Plack::App::Directory' : 'Plack::App::File';
+    
+    $self->{file} ||= $app_class->new({
         root        => $self->root || '.',
         encoding    => $self->encoding
     });
     
-    if (@{$self->candidates} && substr($path, -1, 1) eq '/') {
-        for my $candidate (@{$self->candidates}) {
+    if (@{$self->default} && substr($path, -1, 1) eq '/') {
+        for my $candidate (@{$self->default}) {
             $path .= $candidate;
             my $matched = 'CODE' eq ref $path_match ? $path_match->($path) : $path =~ $path_match;
             if ($matched) {
