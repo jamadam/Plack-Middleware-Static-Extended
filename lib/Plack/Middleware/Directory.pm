@@ -40,18 +40,19 @@ use Plack::Util::Accessor
         });
         
         if ($self->default && (length($path) == 0 || substr($path, -1, 1) eq '/')) {
+            my $res;
             for my $candidate (@{$self->default}) {
                 my $fixed_path = $path . $candidate;
                 local $env->{PATH_INFO} = $fixed_path;
-                my $res = $self->{file}->call($env);
+                $res = $self->{file}->call($env);
                 if ($res->[0] == 200) {
-                    return $res;
+                    last;
                 }
             }
+            return $res;
         }
         
         local $env->{PATH_INFO} = $path;
-        
         return $self->{file}->call($env);
     }
 

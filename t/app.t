@@ -52,7 +52,46 @@ test_psgi (
     app => builder {
         enable "Plack::Middleware::Directory",
             path => sub {s!^/share/!!;},
-            default => ['index.html', 'index.htm'], root => 'share';
+            default => ['index.html', 'index.htm'],
+            root => 'share';
+        sub {
+            [404, [], ['File not found']]
+        };
+    },
+);
+
+BEGIN {
+    chmod(0755, 'share/permission_check/permission_ok');
+    chmod(0744, 'share/permission_check/permission_ng');
+    chmod(0755, 'share/permission_check/permission_ok/permission_ok.html');
+    chmod(0700, 'share/permission_check/permission_ok/permission_ng.html');
+    chmod(0755, 'share/permission_check/permission_ng/permission_ok.html');
+    chmod(0700, 'share/permission_check/permission_ng/permission_ng.html');
+}
+
+test_psgi (
+    client => sub {
+        my $cb  = shift;
+        my $res;
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/");
+        is $res->code, 200, '200 ok';
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ng/");
+        is $res->code, 403, '403 fobbiden';
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/permission_ok.html");
+        is $res->code, 200, '200 ok';
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/permission_ng.html");
+        is $res->code, 403, '403 fobbiden';
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ng/permission_ok.html");
+        is $res->code, 403, '403 fobbiden';
+        $res = $cb->(GET "http://localhost/share/permission_check/permission_ng/permission_ng.html");
+        is $res->code, 403, '403 fobbiden';
+    },
+    app => builder {
+        enable "Plack::Middleware::Directory",
+            path => sub {s!^/share/!!;},
+            default => ['permission_ok.html'],
+            permission_check => 1,
+            root => 'share';
         sub {
             [404, [], ['File not found']]
         };
