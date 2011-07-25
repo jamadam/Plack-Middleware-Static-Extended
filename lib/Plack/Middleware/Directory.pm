@@ -62,22 +62,61 @@ __END__
 
 =head1 NAME
 
-Plack::Middleware::Directory - 
+Plack::Middleware::Directory - serve static files like apache
 
 =head1 SYNOPSIS
 
-    use Plack::Middleware::Directory;
-    Plack::Middleware::Directory->new;
-
+    use Plack::Builder;
+    
+    builder {
+        enable "Plack::Middleware::Directory",
+            path => qr{^/(images|js|css)/},
+            root => './htdocs/',
+            default => ['index.html', 'index.htm'],
+            indexes => 1,
+            ;
+        $app;
+    };
+  
 =head1 DESCRIPTION
 
-=head1 METHODS
+This is a middleware for serving static files with some apache-like features.
+This internally uses L<Plack::App::Directory> and implemented like
+L<Plack::Middleware::Static>.
 
-=head2 new
+=head1 CONFIGURATIONS
+
+=head2 path => regexp or code ref
+
+See L<Plack::App::File>
+
+=head2 root => string
+
+See L<Plack::App::File>
+
+=head2 default => array ref
+
+This option works as apache's DirectoryIndex for overriding index page
+if requests path don't ended with file name.
+
+    default => ['index.html', 'index.htm']
+
+=head2 indexes => boolean
+
+This is for disabling directory index page generation.
+
+    indexes => 1 # active
+    indexes => 0 # disabled
 
 =head1 AUTHOR
 
 sugama, E<lt>sugama@jamadam.comE<gt>
+
+=head1 SEE ALSO
+
+L<Plack::App::Directory>,
+L<Plack::App::File>,
+L<Plack::Middleware::Static>
 
 =head1 COPYRIGHT AND LICENSE
 
