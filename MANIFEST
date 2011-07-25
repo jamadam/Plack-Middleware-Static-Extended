@@ -1,6 +1,6 @@
 Changes
 lib/Plack/App/File/Extended.pm
-lib/Plack/Middleware/Directory.pm
+lib/Plack/Middleware/Static/Extended.pm
 Makefile.PL
 MANIFEST
 README.pod

@@ -26,11 +26,11 @@ test_psgi (
         is $res->content, 'ok';
     },
     app => builder {
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => sub {s!^/share/!!;}, root => "share";
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => sub {s!^/share-pass/!!}, root => "share", pass_through => 1;
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => qr{\.(t|PL|txt)$}i, root => '.';
         sub {
             [200, ['Content-Type' => 'text/plain', 'Content-Length' => 2], ['ok']]
@@ -50,7 +50,7 @@ test_psgi (
         is $res->content, 'foo/index.htm', 'default file name suffixed';
     },
     app => builder {
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => sub {s!^/share/!!;},
             default => ['index.html', 'index.htm'],
             root => 'share';
@@ -87,7 +87,7 @@ test_psgi (
         is $res->code, 403, '403 fobbiden';
     },
     app => builder {
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => sub {s!^/share/!!;},
             default => ['permission_ok.html'],
             permission_check => 1,

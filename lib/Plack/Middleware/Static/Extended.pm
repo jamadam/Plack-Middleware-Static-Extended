@@ -1,4 +1,4 @@
-package Plack::Middleware::Directory;
+package Plack::Middleware::Static::Extended;
 use strict;
 use warnings;
 use parent qw/Plack::Middleware/;
@@ -62,14 +62,14 @@ __END__
 
 =head1 NAME
 
-Plack::Middleware::Directory - serve static files like apache
+Plack::Middleware::Static::Extended - serve static files like apache
 
 =head1 SYNOPSIS
 
     use Plack::Builder;
     
     builder {
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => qr{^/(images|js|css)/},
             root => './htdocs/',
             default => ['index.html', 'index.htm'],

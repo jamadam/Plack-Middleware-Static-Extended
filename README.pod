@@ -1,17 +1,16 @@
 =head1 NAME
 
-Plack::Middleware::Directory - serve static files like apache
+Plack::Middleware::Static::Extended - serve static files like apache
 
 =head1 SYNOPSIS
 
     use Plack::Builder;
     
     builder {
-        enable "Plack::Middleware::Directory",
+        enable "Static::Extended",
             path => qr{^/(images|js|css)/},
             root => './htdocs/',
             default => ['index.html', 'index.htm'],
-            indexes => 1,
             ;
         $app;
     };
@@ -38,13 +37,6 @@ This option works as apache's DirectoryIndex for overriding index page
 if requests path don't ended with file name.
 
     default => ['index.html', 'index.htm']
-
-=head2 indexes => boolean
-
-This is for disabling directory index page generation.
-
-    indexes => 1 # active
-    indexes => 0 # disabled
 
 =head1 AUTHOR
 

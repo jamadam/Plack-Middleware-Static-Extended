@@ -3,7 +3,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %params = (
-    NAME          => 'Plack::Middleware::Directory',
+    NAME          => 'Plack::Middleware::Static::Extended',
     AUTHOR        => 'sugama <sugama@jamadam.com>',
     VERSION_FROM  => 'lib/Plack/Middleware/Directory.pm',
     ABSTRACT_FROM => 'lib/Plack/Middleware/Directory.pm',
