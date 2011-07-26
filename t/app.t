@@ -38,28 +38,6 @@ test_psgi (
     },
 );
 
-test_psgi (
-    client => sub {
-        my $cb  = shift;
-        my $res;
-        $res = $cb->(GET "http://localhost/share/");
-        is $res->code, 200;
-        is $res->content, 'index.html', 'default file name suffixed';
-        $res = $cb->(GET "http://localhost/share/foo/");
-        is $res->code, 200;
-        is $res->content, 'foo/index.htm', 'default file name suffixed';
-    },
-    app => builder {
-        enable "Static::Extended",
-            path => sub {s!^/share/!!;},
-            default => ['index.html', 'index.htm'],
-            root => 'share';
-        sub {
-            [404, [], ['File not found']]
-        };
-    },
-);
-
 BEGIN {
     chmod(0755, 'share/permission_check/permission_ok');
     chmod(0744, 'share/permission_check/permission_ng');
@@ -73,10 +51,6 @@ test_psgi (
     client => sub {
         my $cb  = shift;
         my $res;
-        $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/");
-        is $res->code, 200, '200 ok';
-        $res = $cb->(GET "http://localhost/share/permission_check/permission_ng/");
-        is $res->code, 403, '403 fobbiden';
         $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/permission_ok.html");
         is $res->code, 200, '200 ok';
         $res = $cb->(GET "http://localhost/share/permission_check/permission_ok/permission_ng.html");
@@ -89,7 +63,6 @@ test_psgi (
     app => builder {
         enable "Static::Extended",
             path => sub {s!^/share/!!;},
-            default => ['permission_ok.html'],
             permission_check => 1,
             root => 'share';
         sub {

@@ -27,19 +27,6 @@ use Plack::Util::Accessor qw( default permission_check);
             permission_check    => $self->permission_check,
         });
         
-        if ($self->default && (length($path) == 0 || substr($path, -1, 1) eq '/')) {
-            my $res;
-            for my $candidate (@{$self->default}) {
-                my $fixed_path = $path . $candidate;
-                local $env->{PATH_INFO} = $fixed_path;
-                $res = $self->{file}->call($env);
-                if ($res->[0] == 200) {
-                    last;
-                }
-            }
-            return $res;
-        }
-        
         local $env->{PATH_INFO} = $path;
         return $self->{file}->call($env);
     }
@@ -50,7 +37,7 @@ __END__
 
 =head1 NAME
 
-Plack::Middleware::Static::Extended - serve static files like apache
+Plack::Middleware::Static::Extended - Serve static file if Permission ok
 
 =head1 SYNOPSIS
 
@@ -60,16 +47,13 @@ Plack::Middleware::Static::Extended - serve static files like apache
         enable "Static::Extended",
             path => qr{^/(images|js|css)/},
             root => './htdocs/',
-            default => ['index.html', 'index.htm'],
             ;
         $app;
     };
   
 =head1 DESCRIPTION
 
-This is a middleware for serving static files with some apache-like features.
-This internally uses L<Plack::App::Directory> and implemented like
-L<Plack::Middleware::Static>.
+Permission check
 
 =head1 CONFIGURATIONS
 
@@ -80,13 +64,6 @@ See L<Plack::App::File>
 =head2 root => string
 
 See L<Plack::App::File>
-
-=head2 default => array ref
-
-This option works as apache's DirectoryIndex for overriding index page
-if requests path don't ended with file name.
-
-    default => ['index.html', 'index.htm']
 
 =head1 AUTHOR
 
