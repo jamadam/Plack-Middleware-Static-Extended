@@ -1,21 +1,9 @@
 package Plack::Middleware::Static::Extended;
 use strict;
 use warnings;
-use parent qw/Plack::Middleware/;
+use parent qw/Plack::Middleware::Static/;
 use Plack::App::File::Extended;
-use Plack::Util::Accessor
-    qw( default path root encoding pass_through permission_check);
-    
-    sub call {
-        my ($self, $env) = @_;
-    
-        my $res = $self->_handle_static($env);
-        if ($res && not ($self->pass_through and $res->[0] == 404)) {
-            return $res;
-        }
-    
-        return $self->app->($env);
-    }
+use Plack::Util::Accessor qw( default permission_check);
     
     sub _handle_static {
         my($self, $env) = @_;
