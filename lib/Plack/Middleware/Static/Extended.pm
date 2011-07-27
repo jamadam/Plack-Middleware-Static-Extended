@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use parent qw/Plack::Middleware::Static/;
 use Plack::App::File::Extended;
-use Plack::Util::Accessor qw( default permission_check);
     
     sub _handle_static {
         my($self, $env) = @_;
@@ -18,13 +17,10 @@ use Plack::Util::Accessor qw( default permission_check);
             return unless $matched;
         }
         
-        $path ||= '/';
-        
         $self->{file} ||= Plack::App::File::Extended->new({
             root                => $self->root || '.',
             encoding            => $self->encoding,
-            path                => $path,
-            permission_check    => $self->permission_check,
+            path                => $path || '/',
         });
         
         local $env->{PATH_INFO} = $path;

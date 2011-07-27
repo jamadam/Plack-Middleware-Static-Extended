@@ -63,7 +63,6 @@ test_psgi (
     app => builder {
         enable "Static::Extended",
             path => sub {s!^/share/!!;},
-            permission_check => 1,
             root => 'share';
         sub {
             [404, [], ['File not found']]

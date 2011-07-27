@@ -2,14 +2,13 @@ package Plack::App::File::Extended;
 use parent qw(Plack::App::File);
 use strict;
 use warnings;
-use Plack::Util::Accessor
-    qw( default path root encoding pass_through permission_check);
+use Plack::Util::Accessor qw( path );
     
     sub locate_file {
         my ($self, $env) = @_;
         my ($file, $path_info) = $self->SUPER::locate_file($env);
         return $file if ref $file eq 'ARRAY';
-        if ($self->permission_check && ! _permission_ok($file, $self->root)) {
+        if (! _permission_ok($file, $self->root)) {
             return $self->return_403;
         }
         return ($file, $path_info);
