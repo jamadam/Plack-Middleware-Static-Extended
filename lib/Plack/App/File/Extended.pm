@@ -2,16 +2,30 @@ package Plack::App::File::Extended;
 use parent qw(Plack::App::File);
 use strict;
 use warnings;
+use Plack::Request;
 use Plack::Util::Accessor qw( path );
     
-    sub locate_file {
-        my ($self, $env) = @_;
-        my ($file, $path_info) = $self->SUPER::locate_file($env);
-        return $file if ref $file eq 'ARRAY';
+    sub should_handle {
+        my($self, $file) = @_;
+        return -d $file || -f $file;
+    }
+    
+    sub serve_path {
+        my($self, $env, $file, $fullpath) = @_;
+        
         if (! _permission_ok($file, $self->root)) {
             return $self->return_403;
         }
-        return ($file, $path_info);
+        
+        if (-f $file) {
+            return $self->SUPER::serve_path($env, $file, $fullpath);
+        }
+        
+        my $dir_url = $env->{SCRIPT_NAME} . $env->{PATH_INFO};
+        
+        if ($dir_url !~ m{/$}) {
+            return $self->return_dir_redirect($env);
+        }
     }
     
     ### ---
@@ -38,6 +52,19 @@ use Plack::Util::Accessor qw( path );
             return 1;
         }
         return 0;
+    }
+    
+    sub return_dir_redirect {
+        my ($self, $env) = @_;
+        my $uri = Plack::Request->new($env)->uri;
+        return [ 301,
+            [
+                'Location' => $uri . '/',
+                'Content-Type' => 'text/plain',
+                'Content-Length' => 8,
+            ],
+            [ 'Redirect' ],
+        ];
     }
 
 1;
